@@ -18,10 +18,5 @@ bot.command('start', (ctx) => {
   )
 })
 
-setInterval(() => {
-  const res = supabase.from('users').update({energy: 10000})
-}, 20000)
-
-
 bot.launch()
 
