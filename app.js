@@ -1,7 +1,7 @@
 import {Telegraf, Markup} from 'telegraf'
 
-const token = '7538704808:AAEw3IZpnnwYLjuM2NAb3-YwOWffb5iJ94g'
-const webAppUrl = 'https://tfcoin-2de78.web.app'
+const token = '7632573230:AAGz6u0RL7tf73uR2F0SKubQBkbqX3sWXkE'
+const webAppUrl = 'https://v0-top-frame-mobile-app.vercel.app/'
 
 const bot = new Telegraf(token)
 
