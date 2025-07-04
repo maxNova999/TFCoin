@@ -10,22 +10,6 @@ const webAppUrl = 'https://v0-top-frame-mobile-app.vercel.app/'
 
 const bot = new Telegraf(token)
 
-// bot.command('start', (ctx) => {
-//   ctx.reply(
-//     'Привет! Нажми чтобы начать играть!',
-//     Markup.inlineKeyboard([
-//       Markup.button.webApp(
-//         'Начать',
-//         `${webAppUrl}?ref=${ctx.payload}`
-//       ),
-//     ])
-//   )
-// })
-
-// bot.launch()
-
-
-
 async function addBonus(user_id, friend_telegram_id = null) {
   const refBonus = 5000
 
@@ -87,6 +71,16 @@ bot.start(async (ctx) => {
   const text = ctx.message.text;
   const parts = text.split(' ');
 
+  ctx.reply(
+    'Привет! Нажми чтобы начать играть!',
+    Markup.inlineKeyboard([
+      Markup.button.webApp(
+        'Начать',
+        `${webAppUrl}?ref=${ctx.payload}`
+      ),
+    ])
+  )
+
   if (parts.length > 1) {
     const query = parts[1];
     // ctx.reply(`Ты запустил бота с параметром: ${query}`);
@@ -102,19 +96,7 @@ bot.start(async (ctx) => {
       if(res.status = 201) addBonus(query, ctx.from.id)
       ctx.reply(res.status)
     }
-    else ctx.reply('Нельзя добавляться в друзья несколько раз и/или самого себя!')
-
-    ctx.reply(
-      'Привет! Нажми чтобы начать играть!',
-      Markup.inlineKeyboard([
-        Markup.button.webApp(
-          'Начать',
-          `${webAppUrl}?ref=${ctx.payload}`
-        ),
-      ])
-    )
   }
-
 });
 
 bot.launch();
