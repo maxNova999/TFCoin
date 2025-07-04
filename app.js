@@ -94,7 +94,6 @@ bot.start(async (ctx) => {
       }
       const res = await supabase.from('friends').insert(newFriend)
       if(res.status = 201) addBonus(query, ctx.from.id)
-      ctx.reply(res.status)
     }
   }
 });
