@@ -24,7 +24,7 @@ async function addBonus(user_id, friend_telegram_id = null) {
       const newBalance = data.coins + refBonus;
       await supabase.from('users').update({coins: newBalance}).eq('id', user_id) // исправить что счет меняется на 5000
     } else {
-      console.log("Ошибка в получении data.coins)
+      console.log("Ошибка в получении data.coins")
     }
   }
   if(friend_telegram_id !== null) {
