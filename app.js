@@ -22,7 +22,7 @@ async function addBonus(user_id, friend_telegram_id = null) {
 
     if(data.coins) {
       const newBalance = data.coins + refBonus;
-      await supabase.from('users').update({coins: newBalance}).eq('id', user_id) // исправить что счет меняется на 5000
+      await supabase.from('users').update({coins: newBalance}).eq('id', user_id)
     } else {
       console.log("Ошибка в получении data.coins")
     }
@@ -34,11 +34,13 @@ async function addBonus(user_id, friend_telegram_id = null) {
     .eq('telegram_id', friend_telegram_id)
     .single();
 
-    const newBalance = data.coins + refBonus;
-    await supabase.from('users').update({coins: newBalance}).eq('telegram_id', friend_telegram_id)
+    if(data.coins) {
+      const newBalance = data.coins + refBonus;
+      await supabase.from('users').update({coins: newBalance}).eq('telegram_id', friend_telegram_id)
+    } else {
+      console.log("ошибка в получении data.coins")
+    }
   }
-  // await supabase.rpc('add_to_balance', { user_id, amount: refBonus })
-
 }
 
 async function checkReferral(friend_telegram_id, user_id) {
