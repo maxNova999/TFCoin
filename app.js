@@ -20,7 +20,7 @@ async function addBonus(user_id, friend_telegram_id = null) {
     .eq('id', user_id)
     .single();
 
-    if(await data.coins) {
+    if(data.coins) {
       const newBalance = await data.coins + refBonus;
       await supabase.from('users').update({coins: newBalance}).eq('id', user_id)
     } else {
@@ -34,7 +34,7 @@ async function addBonus(user_id, friend_telegram_id = null) {
     .eq('telegram_id', friend_telegram_id)
     .single();
 
-    if( await data.coins) {
+    if(data.coins) {
       const newBalance = await data.coins + refBonus;
       await supabase.from('users').update({coins: newBalance}).eq('telegram_id', friend_telegram_id)
     } else {
