@@ -76,7 +76,7 @@ bot.start(async (ctx) => {
   const text = ctx.message.text;
   const parts = text.split(' ');
   try {
-    ctx.reply(
+    await ctx.reply(
       'Привет! Нажми чтобы начать играть!',
       Markup.inlineKeyboard([
         Markup.button.webApp(
