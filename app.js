@@ -20,7 +20,7 @@ async function addBonus(user_id, friend_telegram_id = null) {
     .eq('id', user_id)
     .single();
 
-    if(data.coins) {
+    if(await data.coins) {
       const newBalance = await data.coins + refBonus;
       await supabase.from('users').update({coins: newBalance}).eq('id', user_id)
     } else {
@@ -34,7 +34,7 @@ async function addBonus(user_id, friend_telegram_id = null) {
     .eq('telegram_id', friend_telegram_id)
     .single();
 
-    if(data.coins) {
+    if(await data.coins) {
       const newBalance = await data.coins + refBonus;
       await supabase.from('users').update({coins: newBalance}).eq('telegram_id', friend_telegram_id)
     } else {
@@ -75,16 +75,23 @@ bot.start(async (ctx) => {
   // ctx.message.text будет содержать "/start" или "/start some_query"
   const text = ctx.message.text;
   const parts = text.split(' ');
-
-  ctx.reply(
-    'Привет! Нажми чтобы начать играть!',
-    Markup.inlineKeyboard([
-      Markup.button.webApp(
-        'Начать',
-        `${webAppUrl}?ref=${ctx.payload}`
-      ),
-    ])
-  )
+  try {
+    ctx.reply(
+      'Привет! Нажми чтобы начать играть!',
+      Markup.inlineKeyboard([
+        Markup.button.webApp(
+          'Начать',
+          `${webAppUrl}?ref=${ctx.payload}`
+        ),
+      ])
+    )
+  } catch(error) {
+    if (error.response && error.response.error_code === 403) {
+      console.log(`Пользователь с ID ${ctx.from.id} заблокировал бота.`);
+    } else {
+      console.error(`Ошибка при отправке сообщения пользователю с ID ${ctx.from.id}:`, error);
+    }
+  }
 
   if (parts.length > 1) {
     const query = parts[1];
