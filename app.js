@@ -20,8 +20,8 @@ async function addBonus(user_id, friend_telegram_id = null) {
     .eq('id', user_id)
     .single();
 
-    if(data.coins) {
-      const newBalance = data.coins + refBonus;
+    if(await data.coins) {
+      const newBalance = await data.coins + refBonus;
       await supabase.from('users').update({coins: newBalance}).eq('id', user_id)
     } else {
       console.log("Ошибка в получении data.coins")
@@ -34,8 +34,8 @@ async function addBonus(user_id, friend_telegram_id = null) {
     .eq('telegram_id', friend_telegram_id)
     .single();
 
-    if(data.coins) {
-      const newBalance = data.coins + refBonus;
+    if( await data.coins) {
+      const newBalance = await data.coins + refBonus;
       await supabase.from('users').update({coins: newBalance}).eq('telegram_id', friend_telegram_id)
     } else {
       console.log("ошибка в получении data.coins")
