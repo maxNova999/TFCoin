@@ -1,5 +1,6 @@
 import {Telegraf, Markup} from 'telegraf'
 import { createClient } from '@supabase/supabase-js'
+// import { logUserAction } from './logger.js';
 
 const SUPABASE_URL = 'https://eudmdrhihjjuiwgjfipg.supabase.co'
 const SUPABASE_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1ZG1kcmhpaGpqdWl3Z2pmaXBnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxNzU2MjAsImV4cCI6MjA2Mzc1MTYyMH0.003sI3sZ4eHySO1kAhRPdmDtomURBB3rvznn7iEN7PU'
@@ -13,41 +14,77 @@ const bot = new Telegraf(token)
 async function addBonus(user_id, friend_telegram_id = null) {
   const refBonus = 5000;
 
+  // Начисление бонуса рефереру
   if (user_id !== null) {
     const { data: coins, error } = await supabase
       .from('users')
-      .select('coins')
+      .select('coins, telegram_id, first_name, last_name, username')
       .eq('id', user_id)
       .maybeSingle();
 
     if (error) {
-      console.error("Ошибка запроса к Supabase:", error);
-    } else if (coins && coins.coins !== null) {
-      const newBalance = coins.coins + refBonus;
-      await supabase.from('users').update({ coins: newBalance }).eq('id', user_id);
+      console.error("Ошибка при получении баланса пользователя:", error);
+      return;
+    }
+
+    const newBalance = (coins && coins.coins !== null ? coins.coins : 0) + refBonus;
+
+    const { error: updateError } = await supabase
+      .from('users')
+      .upsert(
+        {
+          id: user_id,
+          telegram_id: coins?.telegram_id || null,
+          first_name: coins?.first_name || "Неизвестно",
+          last_name: coins?.last_name || "Неизвестно",
+          username: coins?.username || "Неизвестно",
+          coins: newBalance,
+        },
+        { onConflict: 'id' }
+      );
+
+    if (updateError) {
+      console.error("Ошибка при обновлении баланса пользователя:", updateError);
     } else {
-      console.log("Ошибка в получении data.coins");
+      // console.log(`Бонус ${refBonus} успешно начислен пользователю с ID ${user_id}`);
     }
   }
 
+  // Начисление бонуса приглашенному другу
   if (friend_telegram_id !== null) {
     const { data: coins, error } = await supabase
       .from('users')
-      .select('coins')
+      .select('coins, telegram_id, first_name, last_name, username')
       .eq('telegram_id', friend_telegram_id)
       .maybeSingle();
 
     if (error) {
-      console.error("Ошибка запроса к Supabase:", error);
-    } else if (coins && coins.coins !== null) {
-      const newBalance = coins.coins + refBonus;
-      await supabase.from('users').update({ coins: newBalance }).eq('telegram_id', friend_telegram_id);
+      console.error("Ошибка при получении баланса друга:", error);
+      return;
+    }
+
+    const newBalance = (coins && coins.coins !== null ? coins.coins : 0) + refBonus;
+
+    const { error: updateError } = await supabase
+      .from('users')
+      .upsert(
+        {
+          telegram_id: friend_telegram_id,
+          first_name: coins?.first_name || "Неизвестно",
+          last_name: coins?.last_name || "Неизвестно",
+          username: coins?.username || "Неизвестно",
+          coins: newBalance,
+        },
+        { onConflict: 'telegram_id' }
+      );
+
+    if (updateError) {
+      console.error("Ошибка при обновлении баланса друга:", updateError);
     } else {
-      console.log("Ошибка в получении data.coins");
+      // console.log(`Бонус ${refBonus} успешно начислен другу с Telegram ID ${friend_telegram_id}`);
     }
   }
 }
-
 async function checkReferral(friend_telegram_id, user_id) {
   const { data: user } = await supabase
   .from('users')
@@ -77,9 +114,9 @@ async function checkReferral(friend_telegram_id, user_id) {
 }
 
 bot.start(async (ctx) => {
-  // ctx.message.text будет содержать "/start" или "/start some_query"
   const text = ctx.message.text;
   const parts = text.split(' ');
+
   try {
     await ctx.reply(
       'Привет! Нажми чтобы начать играть!',
@@ -89,8 +126,8 @@ bot.start(async (ctx) => {
           `${webAppUrl}?ref=${ctx.payload}`
         ),
       ])
-    )
-  } catch(error) {
+    );
+  } catch (error) {
     if (error.response && error.response.error_code === 403) {
       console.log(`Пользователь с ID ${ctx.from.id} заблокировал бота.`);
     } else {
@@ -98,19 +135,40 @@ bot.start(async (ctx) => {
     }
   }
 
+  // // Логируем нового пользователя
+  // const newUser = {
+  //   telegram_id: ctx.from.id,
+  //   first_name: ctx.from.first_name,
+  //   last_name: ctx.from.last_name || 'N/A',
+  //   username: ctx.from.username || 'N/A',
+  // };
+  // logUserAction('Новый пользователь', newUser);
+
   if (parts.length > 1) {
     const query = parts[1];
-    // ctx.reply(`Ты запустил бота с параметром: ${query}`);
-    // ctx.reply(await checkReferral(ctx.from.id))
-    if(await checkReferral(ctx.from.id, query)) {
+
+    if (await checkReferral(ctx.from.id, query)) {
       const newFriend = {
-        user_id: query, // здесь нужен обычный айди того кто дал ссылку
-        friend_telegram_id: ctx.from.id, // тут нужен тг айди того кто получает
-        friend_name: ctx.from.first_name, // тут нужно имя того кто получает
-        is_referral: true
+        user_id: query, // ID реферера (того, кто дал ссылку)
+        friend_telegram_id: ctx.from.id, // Telegram ID приглашенного
+        friend_name: ctx.from.first_name, // Имя приглашенного
+        is_referral: true,
+      };
+
+      const res = await supabase.from('friends').insert(newFriend);
+
+      if (res.status === 201) {
+        // // Логируем добавление в друзья
+        // const referrer = {
+        //   user_id: query,
+        //   telegram_id: ctx.from.id,
+        //   username: ctx.from.username || 'N/A',
+        // };
+        // logUserAction('Добавлен в друзья', newUser, referrer);
+
+        // Начисляем бонусы
+        await addBonus(query, ctx.from.id);
       }
-      const res = await supabase.from('friends').insert(newFriend)
-      if(res.status = 201) await addBonus(query, ctx.from.id)
     }
   }
 });
