@@ -11,41 +11,39 @@ const webAppUrl = 'https://v0-top-frame-mobile-app.vercel.app/'
 const bot = new Telegraf(token)
 
 async function addBonus(user_id, friend_telegram_id = null) {
-  async function addBonus(user_id, friend_telegram_id = null) {
-    const refBonus = 5000;
+  const refBonus = 5000;
 
-    if (user_id !== null) {
-      const { data: coins, error } = await supabase
-        .from('users')
-        .select('coins')
-        .eq('id', user_id)
-        .maybeSingle();
+  if (user_id !== null) {
+    const { data: coins, error } = await supabase
+      .from('users')
+      .select('coins')
+      .eq('id', user_id)
+      .maybeSingle();
 
-      if (error) {
-        console.error("Ошибка запроса к Supabase:", error);
-      } else if (coins && coins.coins !== null) {
-        const newBalance = coins.coins + refBonus;
-        await supabase.from('users').update({ coins: newBalance }).eq('id', user_id);
-      } else {
-        console.log("Ошибка в получении data.coins");
-      }
+    if (error) {
+      console.error("Ошибка запроса к Supabase:", error);
+    } else if (coins && coins.coins !== null) {
+      const newBalance = coins.coins + refBonus;
+      await supabase.from('users').update({ coins: newBalance }).eq('id', user_id);
+    } else {
+      console.log("Ошибка в получении data.coins");
     }
+  }
 
-    if (friend_telegram_id !== null) {
-      const { data: coins, error } = await supabase
-        .from('users')
-        .select('coins')
-        .eq('telegram_id', friend_telegram_id)
-        .maybeSingle();
+  if (friend_telegram_id !== null) {
+    const { data: coins, error } = await supabase
+      .from('users')
+      .select('coins')
+      .eq('telegram_id', friend_telegram_id)
+      .maybeSingle();
 
-      if (error) {
-        console.error("Ошибка запроса к Supabase:", error);
-      } else if (coins && coins.coins !== null) {
-        const newBalance = coins.coins + refBonus;
-        await supabase.from('users').update({ coins: newBalance }).eq('telegram_id', friend_telegram_id);
-      } else {
-        console.log("Ошибка в получении data.coins");
-      }
+    if (error) {
+      console.error("Ошибка запроса к Supabase:", error);
+    } else if (coins && coins.coins !== null) {
+      const newBalance = coins.coins + refBonus;
+      await supabase.from('users').update({ coins: newBalance }).eq('telegram_id', friend_telegram_id);
+    } else {
+      console.log("Ошибка в получении data.coins");
     }
   }
 }
@@ -112,7 +110,7 @@ bot.start(async (ctx) => {
         is_referral: true
       }
       const res = await supabase.from('friends').insert(newFriend)
-      if(res.status = 201) addBonus(query, ctx.from.id)
+      if(res.status = 201) await addBonus(query, ctx.from.id)
     }
   }
 });
